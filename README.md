@@ -113,14 +113,38 @@ The harness below demonstrates the invariants in practice.
 ```bash
 python reference/python/examples/golden_chain.py
 ```
+
+```
+POLARIS PROTOCOL
+Commit-Gated Execution · v1.0
+Deterministic conformance harness
+────────────────────────────────────────────────────────────
+
+Golden Chain
+============================================================
+...
 [PASS] valid chain verified
+============================================================
+```
 
 ```bash
 python reference/python/examples/tampered_chain.py
 ```
+
+```
+POLARIS PROTOCOL
+Commit-Gated Execution · v1.0
+Deterministic conformance harness
+────────────────────────────────────────────────────────────
+
+Structural Rejection Demo
+============================================================
+...
 [FAIL]   tampered record detected at sequence 2
 [REJECT] execution from stale state_ref
 [REJECT] execution without commit
+============================================================
+```
 
 ---
 

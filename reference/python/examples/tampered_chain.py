@@ -50,6 +50,14 @@ def commit_chain(history, authority, genesis_h, states):
 
 
 def main() -> int:
+    print("POLARIS PROTOCOL")
+    print("Commit-Gated Execution · v1.0")
+    print("Deterministic conformance harness")
+    print("─" * 60)
+    print()
+    print("Structural Rejection Demo")
+    print("=" * 60)
+
     states = [
         {"balance": 900, "version": 1},
         {"balance": 800, "version": 2},
@@ -100,7 +108,7 @@ def main() -> int:
             or result.block_reason != BlockReason.EXECUTION_WITHOUT_COMMIT):
         return 1
     print("[REJECT] execution without commit")
-
+    print("=" * 60)
     return 0
 
 

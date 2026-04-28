@@ -19,6 +19,14 @@ from polaris.state import CanonicalHistory, state_hash
 
 
 def main() -> int:
+    print("POLARIS PROTOCOL")
+    print("Commit-Gated Execution · v1.0")
+    print("Deterministic conformance harness")
+    print("─" * 60)
+    print()
+    print("Golden Chain")
+    print("=" * 60)
+
     genesis = {"balance": 1000, "version": 0}
     history = CanonicalHistory()
     genesis_h = state_hash(genesis)
@@ -61,6 +69,7 @@ def main() -> int:
         return 1
 
     print("[PASS] valid chain verified")
+    print("=" * 60)
     return 0
 
 
