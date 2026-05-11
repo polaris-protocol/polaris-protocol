@@ -14,6 +14,12 @@ else:
     # → "STALE_STATE_REFERENCE"
 ```
 
+Try it:
+
+```bash
+python reference/python/examples/rejection_demo.py
+```
+
 Or raise on block:
 
 ```python
