@@ -81,8 +81,11 @@ Three structural invariants hold in every conformant implementation:
 ## What this is not
 
 **Not a blockchain.** Assumes a designated commit authority.
+
 **Not an audit log.** Operates before effects, not after.
+
 **Not a workflow engine.** Does not orchestrate business logic.
+
 **Not a full runtime framework.** Provides a minimal execution gate and a normative specification.
 
 ---
