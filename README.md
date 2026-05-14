@@ -1,10 +1,61 @@
 # Polaris Protocol
 
-**No side effect may occur unless it is authorized from the current committed canonical state.**
+**Blocks execution when the request state no longer matches the committed canonical state.**
 
-Distributed systems execute from state that may be stale, superseded by a concurrent transition, or invalidated before execution begins. Logs record what happened. Audit reconstructs it. Neither establishes whether execution was authorized to occur from the state it acted upon.
+Distributed systems execute from state that may be stale, superseded by a concurrent transition, or superseded before execution begins. Logs record what happened. Audit reconstructs it. Neither establishes whether execution was authorized to occur from the state it acted upon.
 
-Polaris makes this constraint explicit and enforces it at execution time.
+---
+
+## Where to place the gate
+
+Place the gate immediately before a side effect:
+
+```python
+gate.assert_authorized(state_ref)
+execute()  # only reaches here if authorized
+```
+
+That's it.
+
+---
+
+## Quick start
+
+Run the demo:
+
+```bash
+python reference/python/examples/stale_state.py
+```
+
+Output:
+
+```
+Polaris Gate — Stale State Demo
+============================================
+
+[Worker A] observed: S1
+[Worker B] commits: S1 → S2
+
+[Worker A] attempts execution (state_ref=S1)
+[Gate]     [BLOCK] STALE_STATE_REFERENCE
+
+→ BLOCKED (stale state)
+→ re-observe required
+
+[Worker A] re-observes: S2
+[Gate]     [PERMIT]
+
+→ PERMIT (current canonical state)
+
+[PASS] stale state demo complete
+```
+
+Run tests:
+
+```bash
+pip install cryptography pytest
+python -m pytest reference/python/tests/ -v
+```
 
 ---
 
@@ -27,27 +78,11 @@ Three structural invariants hold in every conformant implementation:
 
 ---
 
-## Quick start
-
-```bash
-python reference/python/examples/rejection_demo.py
-```
-
-```bash
-pip install cryptography pytest
-python -m pytest reference/python/tests/ -v
-```
-
----
-
 ## What this is not
 
 **Not a blockchain.** Assumes a designated commit authority.
-
 **Not an audit log.** Operates before effects, not after.
-
 **Not a workflow engine.** Does not orchestrate business logic.
-
 **Not a full runtime framework.** Provides a minimal execution gate and a normative specification.
 
 ---
