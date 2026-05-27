@@ -17,7 +17,7 @@ no "authority transfer record" defined in the spec. From the chain's perspective
 indistinguishable from a node disappearing and a new node appearing. An external verifier
 cannot distinguish a legitimate transfer from an attack.
 v1.1 target: Define an authority transfer record with signing requirements that make transfers
-independently verifiable and distinguishable from unexpected authority loss.
+recomputable from canonical history under explicit assumptions and distinguishable from unexpected authority loss.
 
 ## GAP-02 — "Deployment Context" and "Independent" Undefined
 
