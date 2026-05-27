@@ -1,6 +1,6 @@
 # Polaris Protocol Specification
 
-Causal Integrity and Trust Attestation for Agent Systems
+A Structural Execution-Authorization Protocol
 
 **Version:** 1.0
 **Status:** Release Candidate
@@ -9,68 +9,66 @@ Causal Integrity and Trust Attestation for Agent Systems
 **Repository:** polaris-specs/polaris-protocol
 **Conformance:** Section K
 
-## CHANGELOG
-
-### v1.0.0 (current)
-
-- Initial release.
-- Self-declared conformance available (Level 1).
-- PCIS-1 specified, not yet implemented.
-- KNOWN-GAPS.md documents 7 acknowledged limitations deferred to v1.1.
-
-### v1.1 (planned)
-
-- PCIS-1 implemented and published as open source.
-- Suite-verified conformance available (Level 2).
-- 6-month grace period for existing Level 1 implementations.
-- Resolution of KNOWN-GAPS items.
-
-### v2.0 (future)
-
-- Full conformance test suite (PCIS-2).
-- Complete section coverage.
-- Algorithm rotation mechanism.
-- Based on implementation feedback from v1 and v1.1.
-
 ## Preamble
 
-### P.1 — The One Invariant
+### P.1 — Purpose
 
-> No side effect may occur unless it is the result of a committed, validated transition — and that fact must be independently verifiable.
+This specification defines requirements for Polaris-conformant implementations and deployments.
 
-The Polaris invariant. Everything else in this specification follows from it.
+A conformant implementation constrains execution authorization relative to committed canonical state.
 
-Everything in this specification is a consequence of this invariant. If you understand it, you understand Polaris. If an implementation satisfies it — precisely, verifiably, without exception — it is Polaris. If it does not, it is not.
+This document is normative. It defines protocol requirements, deployment requirements, conformance conditions, and explicit scope boundaries.
+
+Motivation, positioning, examples, and related work are non-normative and are maintained outside this specification unless explicitly marked otherwise.
 
 For a minimal path to first implementation, see [QUICKSTART.md](./QUICKSTART.md).
 
-### P.2 — What Polaris Is
+### P.2 — Core Invariant
 
-Polaris is a protocol for commit-gated execution.
+The core Polaris invariant is:
 
-It defines how proposed state changes are validated, committed to a single canonical progression, and only then permitted to produce side effects — with a cryptographically verifiable record of the entire sequence.
+> No side effect may occur unless it is authorized from the current committed canonical state.
 
-Polaris does not define what an agent should do. It defines the constraints under which any agent action is permitted to occur. The distinction matters: Polaris is not a framework, a runtime, or an orchestration system. It is the layer that sits between intent and consequence and says: this action was authorized, in this order, by this authority, and that claim is verifiable by anyone with access to the record.
+A conformant implementation MUST enforce this invariant through the Execution Gate.
 
-Trust is not a feeling. It is a system. Polaris is that system.
+A conformant deployment MUST route all externally observable side-effect paths through the Execution Gate before execution.
 
-### P.3 — Why This Exists
+If an externally observable side-effect path can bypass the Execution Gate, the deployment is not Polaris-conformant.
 
-AI agent systems are executing consequential actions at scale. They are moving money, submitting orders, making decisions that affect real systems. The infrastructure for verifying that those actions were authorized — before they occurred, not after — does not yet exist as a protocol standard.
+Physical atomicity between a PERMIT decision and side-effect completion is outside the scope of this specification.
 
-The absence of this infrastructure creates a specific class of risk: not that agents will act incorrectly, but that no one can prove they acted correctly. An agent system without causal integrity is a system where the logs can be altered, where the order of decisions can be disputed, where the boundary between "what the agent was authorized to do" and "what the agent did" cannot be independently established.
+### P.3 — Scope
 
-Polaris closes this gap. It does not make agents smarter or safer in the sense of better decisions. It makes the record of what agents did tamper-evident, causally ordered, and independently verifiable. That is a different problem, and it is the problem Polaris is designed to solve.
+Polaris defines:
 
-### P.4 — Design Principles
+- canonical state progression per domain
+- deterministic validation requirements
+- commit authority requirements
+- execution gate requirements
+- rejection semantics
+- canonical serialization requirements
+- replay and verification requirements
+- conformance requirements
 
-**Restrictive by intent.** The constraints in this specification are governance boundaries, not engineering preferences. An implementation that satisfies all normative requirements can use this protocol as an unambiguous reference point when external pressure seeks to relax those boundaries. "The protocol requires this" is a complete answer.
+Polaris does not define:
 
-**Precise over flexible.** Where a choice exists between a flexible formulation and a precise one, this specification chooses precision. Flexibility at the protocol level produces ambiguity at the implementation level. Ambiguity produces non-interoperable implementations. Non-interoperable implementations produce a label, not a protocol.
+- application-specific business logic
+- consensus or leader election
+- cross-domain atomic coordination
+- key management procedures beyond verification requirements
+- agent orchestration or governance models
+- identity, IAM, or authorization policy
+- physical side-effect reconciliation, retry, rollback, or compensation
 
-**Fail closed always.** Every failure mode in this specification resolves to one of two outcomes: reject the transition, or suspend the domain. There is no third outcome. There is no best-effort mode. There is no partial success. A system that proceeds under uncertainty is not Polaris.
+### P.4 — Design Constraints
 
-**Verifiable by anyone.** The guarantees of this protocol are not assertions by the implementing party. They are claims that any external verifier — a regulator, an auditor, a counterparty, a court — can verify independently, without trusting the party that produced the record. If it cannot be verified independently, it is not a guarantee.
+This specification is restrictive by design. A system that does not satisfy a normative MUST requirement is not Polaris-conformant.
+
+Normative requirements are written to be testable. A requirement that cannot be tested or used to reject a non-conformant implementation should not appear in this specification.
+
+Polaris follows a fail-closed model. If required conditions for validation, commit, or execution authorization cannot be deterministically established, the implementation MUST reject the transition, block execution, or suspend the affected domain according to the applicable section.
+
+No best-effort execution mode is defined by this specification.
 
 ### P.5 — Who This Document Is For
 
@@ -182,7 +180,7 @@ It defines how proposed transitions are validated, committed to a single canonic
 
 Polaris enforces a causal invariant:
 
-> No side effect may occur unless it is the result of a committed, validated transition.
+> No side effect may occur unless it is authorized from the current committed canonical state.
 
 Polaris does not define business logic. It defines the constraints under which execution is permitted.
 
@@ -308,7 +306,7 @@ An implementation that begins as a development profile and intends to become pro
 
 **Step 2 — Suspended state enforcement** Verify that the domain enters suspended state on infrastructure failure. Test by making the commit authority unreachable and confirming no transitions are committed or executed during the outage.
 
-**Step 3 — Execution gate hardening** Verify that no bypass path exists. Confirm that gate check 1 (commit exists) is never skipped. The gate MUST NOT be bypassed even when the calling code "knows" the transition is committed.
+**Step 3 — Execution gate hardening** Verify that all externally observable side-effect paths pass through the Execution Gate. Confirm that the gate's current-state check is never skipped. A deployment with any bypass path is not Polaris-conformant.
 
 **Step 4 — Trust assumption documentation** Produce a deployment-specific document that states which trust assumptions from J.2 the deployment satisfies, by what mechanism each is satisfied, and which are NOT satisfied with mitigations.
 
@@ -517,7 +515,7 @@ The canonical progression of a domain is the complete, ordered record of all com
 
 ### B.9 Relationship to Other Sections
 
-- **Section A** defines: the core invariant — no execution without commit.
+- **Section A** defines: the core invariant — execution authorized only from committed canonical state.
 - **Section B** defines: where canonical state lives, who controls it, and what happens when control is lost.
 - **Section C** defines: what validation must satisfy before commit is permitted.
 - **Section D** defines: the commit mechanism and conflict handling.
@@ -712,7 +710,7 @@ If replay does not reproduce the verdict, the validator is impure.
 
 ### C.15 Relationship to Other Sections
 
-- **Section A** defines: the core invariant — no execution without commit.
+- **Section A** defines: the core invariant — execution authorized only from committed canonical state.
 - **Section B** defines: canonical state and commit authority.
 - **Section C** defines: what validation must satisfy before commit is permitted.
 - **Section D** defines: the commit mechanism, conflict handling, and re-validation trigger.
@@ -853,7 +851,7 @@ Before the linearization point, the commit authority MUST verify:
 
 ### D.12 Relationship to Other Sections
 
-- **Section A** defines: the core invariant — no execution without commit.
+- **Section A** defines: the core invariant — execution authorized only from committed canonical state.
 - **Section B** defines: canonical state, state domains, and commit authority scope.
 - **Section C** defines: validation prerequisites that must be satisfied before commit.
 - **Section D** defines: the commit mechanism, linearization, conflict handling, and commit record.
@@ -1025,7 +1023,7 @@ Section E is the serialization contract that makes cross-implementation hash int
 
 Cryptographic integrity provides tamper evidence, authenticity, and independent verifiability for committed Polaris artifacts.
 
-Cryptography does not determine whether a transition is valid. Validation determines eligibility. Commit authority determines canonical progression. Cryptographic integrity makes committed artifacts independently verifiable.
+Cryptography does not determine whether a transition is valid. Validation determines eligibility. Commit authority determines canonical progression. Cryptographic integrity makes committed artifacts recomputable from canonical history under explicit assumptions.
 
 ### F.2 Core Requirement
 
@@ -1244,7 +1242,7 @@ A production-conformant Polaris cryptographic integrity implementation is confor
 - **Section J** defines: F's scope boundaries. J.7 explicitly lists key management, HSM requirements, and rotation ceremonies as out of scope. F.12 defines the verifiability constraint that key management must satisfy.
 - **Section K** defines: F-1 through F-7 conformance checklist items.
 
-Section F is the integrity layer. Without F, the canonical progression is a structured record. With F, it is a tamper-evident, independently verifiable chain.
+Section F is the integrity layer. Without F, the canonical progression is a structured record. With F, committed artifacts are tamper-detectable via replay and signature verification, and authorization decisions are recomputable from canonical history under explicit model assumptions.
 
 ## Section G — Transition Object
 
@@ -1563,7 +1561,7 @@ A domain is initialized exactly once. Re-initialization is not permitted within 
 
 **MUST NOT** genesis_hash MUST NOT be recomputed or altered after initialization.
 
-**MAY** If a fresh start is required, a new domain_id MUST be used. The old domain's canonical progression remains intact and independently verifiable.
+**MAY** If a fresh start is required, a new domain_id MUST be used. The old domain's canonical progression remains intact and recomputable from canonical history under explicit assumptions.
 
 ### H.7 Replay from Genesis
 
@@ -1644,15 +1642,15 @@ Genesis is not the first transition. It is what makes the first transition possi
 
 ### I.1 Purpose
 
-The Execution Gate is the third and final logical role in the Polaris protocol. It is the enforcement point of the core invariant: no side effect may occur unless it is the result of a committed, validated transition.
+The Execution Gate is the enforcement point for execution authorization. Its responsibility is to determine whether an execution request is authorized from the current committed canonical state. The primary gate condition is:
 
-The Validator determines eligibility. The Commit Authority determines canonical progression. The Execution Gate determines whether execution is permitted at all.
+PERMIT iff state_ref = h(S_n)
 
-The Execution Gate does not evaluate the transition. It does not advance canonical state. Its sole responsibility is to verify that a committed transition exists and to permit or block execution accordingly.
+The caller provides the observed state reference. The Execution Gate obtains the current committed canonical state reference from the canonical store or Commit Authority, not from the caller.
 
 **MUST** Every execution attempt MUST pass through the execution gate.
 
-**MUST NOT** Execution MUST NOT occur by any path that bypasses the gate.
+Bypass paths are non-conformant.
 
 **MUST NOT** The execution gate MUST NOT be optional or configurable in production-conformant deployments.
 
@@ -1672,23 +1670,30 @@ The execution gate makes a binary decision: PERMIT or BLOCK. There is no third o
 
 ### I.3 Gate Checks
 
-The execution gate performs three checks in order. All three must pass for execution to be permitted.
+The execution gate performs the following checks.
 
-| Check | Condition for PERMIT | Block reason if failed |
+| Check | Condition for PERMIT | Block reason |
 |---|---|---|
-| 1. Commit exists | The transition is in COMMITTED phase. A commit record exists and is retrievable. | EXECUTION_WITHOUT_COMMIT |
-| 2. Transition identity | The transition_id presented for execution matches the transition_id in the commit record. | TRANSITION_MISMATCH |
-| 3. Domain active | The domain is in ACTIVE state. Not SUSPENDED or UNINITIALIZED. | DOMAIN_NOT_ACTIVE |
+| 1. Valid state_ref | state_ref is present and well-formed | INVALID_STATE_REFERENCE |
+| 2. Current state match | state_ref = h(S_n) | STALE_STATE_REFERENCE |
+| 3. Domain active | domain is ACTIVE | DOMAIN_NOT_ACTIVE |
+| 4. Transition binding | committed transition exists if required by the deployment profile | EXECUTION_WITHOUT_COMMIT |
 
-**MUST** All three checks MUST pass for execution to be permitted.
+**MUST** All required checks for the applicable deployment profile MUST pass for execution to be permitted.
 
-**MUST** Checks MUST be performed in the order listed.
+**MUST NOT** The Execution Gate MUST NOT obtain the current committed canonical state reference from the caller.
 
-**MUST** The gate MUST record the outcome of every evaluation with transition_id and reason.
-
-**MUST NOT** Check 1 MUST NOT be skipped on the assumption that a prior step has already verified commit status. The gate is the authoritative enforcement point.
+**MUST** The Execution Gate MUST return BLOCK if state_ref does not match the current committed canonical state reference.
 
 Note: DOMAIN_NOT_ACTIVE is a gate block reason, not a transition rejection reason. It indicates the gate check failed at the domain state level. DOMAIN_SUSPENDED (Section G.8) is the corresponding transition-level rejection reason that may be issued when a transition is formally rejected due to domain suspension.
+
+### Deployment Requirement
+
+A conformant deployment MUST ensure that all externally observable side-effect paths pass through the Execution Gate before execution.
+
+If any externally observable side-effect path can bypass the Execution Gate, the deployment is not Polaris-conformant.
+
+This is a deployment requirement, not a guarantee that the protocol can enforce against paths outside the conformant implementation boundary.
 
 ### I.4 Execution Record
 
@@ -1734,7 +1739,7 @@ The most common collapse failure is a function that commits and immediately exec
 
 ### I.7 Gate in Agent Systems
 
-**MUST** Every agent action that produces a side effect MUST pass through the execution gate.
+**MUST** Every execution request that produces a side effect MUST pass through the execution gate.
 
 **MUST** Each agent's execution MUST reference the transition_id of the committed transition that authorized that agent's action.
 
@@ -1750,9 +1755,9 @@ The most common collapse failure is a function that commits and immediately exec
 
 **MUST NOT** The gate MUST NOT permit execution on uncertainty. Uncertain = blocked.
 
-**MUST NOT** A "break glass" or emergency bypass of the execution gate is not permitted in production-conformant deployments. If a bypass exists, the deployment is non-conformant.
+**MUST NOT** A production-conformant deployment MUST NOT provide a "break glass" or emergency bypass path around the Execution Gate. If such a bypass path exists, the deployment is not Polaris-conformant.
 
-There is no emergency override. An execution that cannot be authorized by a committed transition does not occur.
+A deployment with an externally observable side-effect path that bypasses the Execution Gate is not Polaris-conformant.
 
 ### I.9 Observability
 
@@ -1766,7 +1771,7 @@ There is no emergency override. An execution that cannot be authorized by a comm
 
 ### I.10 Conformance Requirements
 
-- **I-1** Every execution attempt passes through the execution gate. No bypass path exists in production-conformant deployments.
+- **I-1** Every execution attempt passes through the execution gate. Bypass paths are non-conformant.
 - **I-2** The gate performs all three checks in order: commit exists, transition identity matches, domain is active.
 - **I-3** A single failed check blocks execution. Partial execution does not occur.
 - **I-4** Every permitted and completed execution produces an execution record with all required fields including executed_at per E.13.
@@ -1782,7 +1787,7 @@ There is no emergency override. An execution that cannot be authorized by a comm
 - **Section A** defines: the core invariant the gate enforces.
 - **Section B** defines: domain active/suspended state checked in gate check 3.
 - **Section C** defines: the Validator — logically prior to the gate, distinct role.
-- **Section D** defines: the commit record verified in gate check 1 and 2.
+- **Section D** defines: the commit record used when transition binding is required by the applicable deployment profile.
 - **Section G** defines: the transition object and its phase, updated to EXECUTED.
 - **Section H** defines: domain state (ACTIVE/SUSPENDED/UNINITIALIZED) checked in gate check 3.
 - **Section J** defines: I's trust assumptions — I enforces that execution requires a committed transition, but cannot detect a commit authority that committed fraudulently. J.4 defines this as outside I's scope.
@@ -1803,7 +1808,7 @@ All three MUST exist for a transition in EXECUTED phase. Any missing record indi
 
 The threat model defines the security and integrity properties that Polaris provides, the conditions under which those properties hold, and the boundaries beyond which the protocol makes no claims.
 
-Polaris is a causal integrity protocol. Its guarantees are about the verifiability of what happened, in what order, and that the record has not been altered. It is not an access control system. It is not a Byzantine fault-tolerant consensus protocol. It is not a cryptographic authentication system for agents or users.
+Polaris is a protocol for execution authorization relative to committed canonical state. Its guarantees are about the verifiability of what was recorded, in what order, and that the record has not been altered. It is not an access control system. It is not a Byzantine fault-tolerant consensus protocol. It is not a cryptographic authentication system for agents or users.
 
 Understanding what Polaris does not protect against is as important as understanding what it does.
 
@@ -1860,10 +1865,10 @@ Given trust assumptions T1–T5 hold, a verifier with access to the genesis stat
 2. That no transition in the sequence was modified after commit.
 3. That no transition was inserted into the middle of the sequence after the fact.
 4. That no transition was deleted from the sequence after the fact.
-5. That every execution that occurred was authorized by a committed transition in the sequence.
+5. That every gate-permitted execution request recorded by the conformant implementation satisfied the Execution Gate requirements at the time of evaluation.
 6. That the commit authority that produced each commit record held the declared signing key at the time of commit.
 
-These six properties are what "causal integrity" means in Polaris. Nothing more. Nothing less.
+These properties define the scope of Polaris execution-authorization guarantees. Nothing more. Nothing less.
 
 ### J.6 Attacker Model
 
@@ -1916,7 +1921,7 @@ The confidentiality approach is a deployment-level decision. Polaris does not co
 - **Section F** defines: cryptographic integrity — key security is T4.
 - **Section G** defines: the transition object — J's protections are specifically about the integrity of G's committed state and the detectability of tampering.
 - **Section H** defines: genesis state — J's guarantee that the canonical progression is verifiable starts at H.
-- **Section I** defines: execution gate — J's guarantee that execution cannot occur without commit is enforced by I.
+- **Section I** defines: execution gate — J's guarantee about gate-permitted execution requests is enforced by I.
 - **Section K** defines: the conformance process that operationalises J.2's requirement to document trust assumptions.
 
 Every guarantee in Sections B through F is conditional on the trust assumptions in J.2. Section J is not an addendum. It is the frame within which the entire protocol operates.
@@ -2017,7 +2022,7 @@ A conformant implementation satisfies all 66 items below.
 - **F-1** Canonical state hashing active. prev_state_hash and resulting_state_hash computed via SHA-256 over canonical JSON, lowercase hex.
 - **F-2** Commit payload signing active. Ed25519 standard variant, over SHA-256 digest of canonical JSON commit payload. Raw bytes signed, not hex-encoded.
 - **F-3** Two SHA-256 uses not conflated. State hashing and payload hashing operate on distinct objects.
-- **F-4** Authority identity independently verifiable. Verifier can retrieve public key (lowercase hex) without assistance from signing party.
+- **F-4** Authority identity verifiable without contacting the commit authority. Verifier can retrieve public key (lowercase hex) without assistance from signing party.
 - **F-5** Chain integrity verifiable. prev_state_hash in artifact N matches resulting_state_hash of artifact N-1.
 - **F-6** Cross-domain replay protection. domain_id in commit record verified against domain under verification.
 - **F-7** Fail closed on crypto failure. Domain enters suspended state if cryptographic integrity cannot be established.
@@ -2050,7 +2055,7 @@ A conformant implementation satisfies all 66 items below.
 
 **Section I — Execution Gate**
 
-- **I-1** No bypass path. Every execution attempt passes through the gate in production.
+- **I-1** All externally observable side-effect paths pass through the Execution Gate in conformant deployments. Any bypass path is non-conformant.
 - **I-2** All three gate checks performed in order.
 - **I-3** Single failed check blocks execution. Partial execution not possible.
 - **I-4** Execution record produced with all required fields including executed_at per E.13.
@@ -2167,7 +2172,7 @@ Level 1 claims made after PCIS-1 is published are still valid, but MUST be disti
 
 ## Section L — Polaris vs Other Patterns
 
-**Status:** Informative (v1.0)
+**Status:** Informative (v1.0) — This section contains no normative requirements and defines no conformance conditions.
 
 This section contains no normative requirements. Its purpose is to position Polaris relative to known architectural patterns.
 
@@ -2181,7 +2186,7 @@ Event sourcing is the most common conflation. Both maintain an append-only histo
 
 | What they share | Where they diverge |
 |---|---|
-| Append-only record of state changes. | Event sourcing records what happened. Polaris enforces that nothing happens without prior authorization through the commit gate. |
+| Append-only record of state changes. | Event sourcing records events after they occur. Polaris enforces that nothing happens without prior authorization through the commit gate. |
 | Current state reconstructed by replaying history. | Event sourcing does not require that events be validated before they are appended. Polaris mandates validation before commit. |
 | Hash chain or sequence for ordering and integrity. | Event sourcing does not define an execution gate. Events may trigger side effects by any mechanism. Polaris requires side effects to be explicitly gated on committed transitions. |
 | Replayability as a design goal. | Event sourcing is a storage and reconstruction pattern. Polaris is an execution control protocol. The record is a consequence of the protocol, not its purpose. |
@@ -2198,7 +2203,7 @@ The saga pattern manages long-running business transactions across multiple serv
 | Acknowledgment that distributed atomicity is not available. | Saga does not require that each step be validated before execution. Polaris mandates it. |
 | Sequential state progression across steps. | Saga manages orchestration logic. Polaris does not manage orchestration — it constrains what each step may do. |
 
-**Relationship:** Polaris and saga are complementary, not competing. A multi-agent system may use a saga-style orchestrator to sequence agent actions, while each agent action is individually governed by Polaris. The orchestrator handles the flow. Polaris handles the authorization and integrity of each step.
+**Relationship:** Polaris and saga are complementary, not competing. A multi-agent system may use a saga-style orchestrator to sequence execution requests, while each execution request is individually governed by Polaris. The orchestrator handles the flow. Polaris handles the authorization and integrity of each step.
 
 ### L.4 Polaris vs Distributed Transaction Coordinator
 
@@ -2210,20 +2215,20 @@ Distributed transaction coordinators — two-phase commit, XA transactions — p
 | The concept of a prepare/validate phase before commit. | Distributed coordinators are infrastructure — they move data. Polaris is a protocol — it governs execution. |
 | Failure semantics — if commit fails, state does not change. | Distributed coordinators do not require cryptographic integrity or execution gating. Polaris requires both. |
 
-**Relationship:** Polaris is not a distributed transaction coordinator. It does not provide cross-domain atomicity. Where a distributed coordinator provides atomicity across participants, Polaris provides causal integrity within a domain. They solve different problems.
+**Relationship:** Polaris is not a distributed transaction coordinator. It does not provide cross-domain atomicity. Where a distributed coordinator provides atomicity across participants, Polaris provides execution authorization relative to committed canonical state within a domain. They solve different problems.
 
 ### L.5 Polaris vs Audit Logging
 
-Audit logging records what happened for review after the fact. Polaris produces a verifiable record of what happened.
+Audit logging records events for review after the fact. Polaris records gate-permitted execution decisions that can be recomputed from canonical history under explicit model assumptions.
 
 | What they share | Where they diverge |
 |---|---|
 | A record of actions taken, in order, with timestamps. | Audit logs are written after execution. Polaris commits before execution. |
 | Used for compliance, review, and incident investigation. | Audit logs can be modified, deleted, or forged without built-in detection. Polaris's hash chain makes modification detectable. |
-| Append-only design intent. | Audit logs record what happened. They do not prevent unauthorized execution. Polaris prevents unauthorized execution. |
-| Structured records with fields and identifiers. | Audit logs are self-reported by the system being audited. Polaris's cryptographic signing creates a record independently verifiable without trusting the reporting system. |
+| Append-only design intent. | Audit logs record events after they occur. They do not prevent unauthorized execution. Polaris blocks execution requests that do not satisfy the gate condition at gate evaluation time. |
+| Structured records with fields and identifiers. | Audit logs are self-reported by the system being audited. Polaris records gate-permitted execution decisions that can be recomputed from canonical history under explicit model assumptions. |
 
-**Relationship:** Audit logging is reactive. Polaris is preventive. An audit log tells you what happened. Polaris proves that what happened was authorized before it happened, and that the record has not been altered since. A system with Polaris produces an audit log as a by-product. A system with only an audit log does not have Polaris.
+**Relationship:** Audit logging is reactive. Polaris evaluates execution authorization before the side-effect path is entered. An audit log records events after execution. Polaris records gate-permitted execution decisions and supports replay verification of the canonical history. A system with Polaris produces an audit log as a by-product. A system with only an audit log does not have Polaris.
 
 ### L.6 Polaris vs Access Control Systems
 
@@ -2245,7 +2250,7 @@ Blockchain and distributed ledger technologies (DLT) are the most common frame a
 |---|---|
 | Append-only record of state changes with cryptographic integrity. | Blockchain achieves consensus among mutually distrusting parties without a central authority. Polaris assumes a defined commit authority and makes no claims about consensus. |
 | Hash chain linking each record to its predecessor. | Blockchain's chain serves consensus — it allows distrusting nodes to agree on canonical history. Polaris's chain serves verifiability — it allows any party to verify that a trusted commit authority produced an unaltered record. |
-| Tamper-evident history. | Blockchain is designed for adversarial environments where any participant might be malicious. Polaris assumes a trusted commit authority (T1). |
+| Tamper-detectable via replay verification. | Blockchain is designed for adversarial environments where any participant might be malicious. Polaris assumes a trusted commit authority (T1). |
 | Independent verifiability. | Blockchain achieves verifiability through distributed replication. Polaris achieves verifiability through cryptographic signing by a known authority. Different mechanisms, different threat models. |
 
 **Relationship:** Polaris is not a blockchain. It does not solve the Byzantine generals problem. It does not provide consensus among mutually distrusting parties. It assumes trust in the commit authority and uses cryptography to make the authority's actions verifiable.
@@ -2260,28 +2265,28 @@ OpenTelemetry (OTel) is the most common observability framework engineers will c
 
 | What they share | Where they diverge |
 |---|---|
-| Structured records of system activity with timestamps and identifiers. | OTel records what happened — after it happened. Polaris commits before execution — the record precedes and authorizes the action. |
+| Structured records of system activity with timestamps and identifiers. | OTel records observed activity after execution. Polaris commits before execution — the record precedes and authorizes the action. |
 | Causal ordering of events. | OTel's trace context propagates correlation IDs. Polaris's prev_state_hash chain creates cryptographic causal binding. OTel traces can be dropped. Polaris's chain cannot be broken without detection. |
-| Used for compliance and audit purposes. | OTel traces are self-reported by the system being observed. Polaris records are independently verifiable — a verifier does not need to trust the reporting system. |
+| Used for compliance and audit purposes. | OTel traces are self-reported by the system being observed. Polaris records are recomputable from canonical history under explicit assumptions — a verifier does not need to trust the reporting system. |
 | Spans and traces connecting distributed operations. | OTel does not block or authorize execution. It observes it. Polaris blocks execution without a committed transition. |
 
-**Relationship:** OTel and Polaris are complementary. OTel tells you what your system did. Polaris proves what your system was authorized to do. A Polaris-conformant system can and should emit OTel traces alongside Polaris commit records. They serve different audiences: OTel serves developers debugging behavior, Polaris serves auditors verifying authorization.
+**Relationship:** OTel and Polaris are complementary. OTel tells you what your system did. Polaris records gate-permitted execution decisions that can be recomputed from canonical history under explicit model assumptions. A Polaris-conformant system can and should emit OTel traces alongside Polaris commit records. They serve different audiences: OTel serves developers debugging behavior, Polaris serves auditors verifying authorization.
 
-The test: can an external auditor verify that action X was authorized before it occurred, using only publicly accessible records, without trusting any party involved? OTel cannot satisfy this test. Polaris can.
+The test: can an external auditor verify that action X was authorized before it occurred, using only publicly accessible records, without querying any party involved? OTel cannot satisfy this test. Polaris can.
 
 ### L.9 Summary — One Line Each
 
 - **Event Sourcing** — You have the storage pattern. You are missing the execution gate and the commit-before-execution invariant.
 - **Saga Pattern** — You have the orchestration pattern. Polaris governs individual steps within the saga, not the saga itself.
-- **Distributed Transaction Coordinator** — You have cross-participant atomicity. Polaris provides intra-domain causal integrity, not cross-domain atomicity.
-- **Audit Logging** — You have a reactive record. Polaris is preventive authorization that produces a verifiable record as a by-product.
+- **Distributed Transaction Coordinator** — You have cross-participant atomicity. Polaris provides intra-domain execution authorization relative to committed canonical state, not cross-domain atomicity.
+- **Audit Logging** — You have a reactive record. Polaris evaluates execution authorization before the side-effect path is entered. A conformant implementation produces replay-verifiable records as a by-product.
 - **Access Control** — You have permission checking. Polaris provides execution gating bound to a committed, verifiable causal record.
-- **Blockchain / DLT** — You have consensus among mutually distrusting parties. Polaris assumes a trusted commit authority and provides causal integrity, not distributed consensus.
+- **Blockchain / DLT** — You have consensus among mutually distrusting parties. Polaris assumes a trusted commit authority and provides execution authorization relative to committed canonical state, not distributed consensus.
 - **OpenTelemetry / Distributed Tracing** — You have observability after execution. Polaris is authorization before execution.
 
 They are complementary, not competing.
 
-None of these patterns is wrong. None of them is Polaris. Polaris solves one problem precisely: ensuring that no side effect occurs unless it is the result of a committed, validated transition, and that this fact is independently verifiable after the fact.
+None of these patterns is wrong. None of them is Polaris. Polaris constrains one property precisely: execution authorization relative to the current committed canonical state.
 
 ### L.10 Relationship to Other Sections
 
