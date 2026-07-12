@@ -2,7 +2,13 @@
 
 **Blocks execution when the request state no longer matches the committed canonical state.**
 
-Distributed systems execute from state that may be stale, superseded by a concurrent transition, or superseded before execution begins. Logs record what happened. Audit reconstructs it. Neither establishes whether execution was authorized to occur from the state it acted upon.
+Polaris does not introduce CAS, hashes, logs, OCC, or deterministic validation.
+It isolates a narrow execution-authority invariant that is often implicit in
+systems already using those mechanisms.
+
+Distributed systems execute from state that may be stale, superseded by a concurrent transition, or superseded before execution begins. Logs record what happened. Audit reconstructs it. Neither, by itself,
+establishes whether execution was authorized relative to the state it acted
+upon.
 
 ---
 
@@ -88,6 +94,10 @@ Three structural invariants hold in every conformant implementation:
 
 **Not a full runtime framework.** Provides a minimal execution gate and a normative specification.
 
+Not a new concurrency-control primitive. It uses familiar mechanisms such as
+CAS and versioned state; the contribution is the explicit execution-authority
+contract.
+
 ---
 
 ## Specification
@@ -106,7 +116,7 @@ Three structural invariants hold in every conformant implementation:
 - Version: 1.0
 - License: Specification — CC-BY-4.0 / Reference implementations — Apache 2.0
 - Conformance: Level 1 (reference implementation)
-- Paper: SRDS 2026 (submitted May 2026)
+- Paper: Technical report v0.6 (April 2026); active revision in progress
 
 Implementations are invited.
 Questions and errata: open an issue tagged `[conformance]` or `[errata]`
