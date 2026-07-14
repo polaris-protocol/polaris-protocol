@@ -17,4 +17,4 @@ The state that justified the plan may not.
 
 ---
 
-Full model: github.com/polaris-specs/polaris-protocol
+Full model: github.com/polaris-protocol/polaris-protocol

@@ -148,5 +148,5 @@ implementors actually found.
 
 **Start today.**
 
-Repo: https://github.com/polaris-specs/polaris-protocol
+Repo: https://github.com/polaris-protocol/polaris-protocol
 Questions: open an issue or email daniel@polaris-protocol.org

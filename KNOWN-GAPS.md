@@ -3,7 +3,7 @@
 This document lists acknowledged limitations of Polaris v1.0 that are deferred to v1.1.
 These items do not affect interoperability of conformant implementations but represent areas
 where the specification is incomplete or where further work is needed.
-Contributors are invited to propose resolutions via: https://github.com/polaris-specs/polaris-protocol/issues
+Contributors are invited to propose resolutions via: https://github.com/polaris-protocol/polaris-protocol/issues
 
 ## GAP-01 — Intentional Authority Transfer
 

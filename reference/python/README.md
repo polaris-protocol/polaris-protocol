@@ -1,6 +1,6 @@
 # Polaris Reference Harness
 
-Executable conformance harness for the [Polaris Protocol](https://github.com/polaris-specs/polaris-protocol).
+Executable conformance harness for the [Polaris Protocol](https://github.com/polaris-protocol/polaris-protocol).
 
 This is not a production implementation. It is a testable truth: every invariant in the protocol either passes or fails deterministically.
 
@@ -74,6 +74,6 @@ tests/
 
 ## Specification
 
-- Normative spec: [SPEC.md](https://github.com/polaris-specs/polaris-protocol)
-- Minimal conformance: [QUICKSTART.md](https://github.com/polaris-specs/polaris-protocol/blob/main/QUICKSTART.md)
+- Normative spec: [SPEC.md](https://github.com/polaris-protocol/polaris-protocol)
+- Minimal conformance: [QUICKSTART.md](https://github.com/polaris-protocol/polaris-protocol/blob/main/QUICKSTART.md)
 - Technical report: [POLARIS-TR-2026-001 v0.5](https://zenodo.org/records/19669105)

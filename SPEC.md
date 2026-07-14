@@ -6,7 +6,7 @@ A Structural Execution-Authorization Protocol
 **Status:** Release Candidate
 **License (Specification):** Creative Commons Attribution 4.0 International (CC-BY-4.0)
 **License (Reference Implementations):** Apache License, Version 2.0
-**Repository:** polaris-specs/polaris-protocol
+**Repository:** polaris-protocol/polaris-protocol
 **Conformance:** Section K
 
 ## Preamble
@@ -142,13 +142,13 @@ Breaking changes require a major version increment. A v1 implementation is not r
 
 Questions regarding interpretation of this specification, suspected errors, or proposed changes should be directed to:
 
-- GitHub Issues: https://github.com/polaris-specs/polaris-protocol/issues
+- GitHub Issues: https://github.com/polaris-protocol/polaris-protocol/issues
 - Conformance questions: open an issue tagged [conformance].
 - Errata: open an issue tagged [errata]. Confirmed errata will be published in the repository and incorporated in the next minor version.
 
 #### P.8.2 PCIS-1 Timeline
 
-PCIS-1 is under active development. Publication timeline will be announced in the repository when a release candidate is available. Progress is tracked at: github.com/polaris-specs/polaris-protocol/milestones
+PCIS-1 is under active development. Publication timeline will be announced in the repository when a release candidate is available. Progress is tracked at: github.com/polaris-protocol/polaris-protocol/milestones
 
 ### P.9 — Legal Notice
 
@@ -2155,7 +2155,7 @@ PCIS-1 result document: [URL]
 
 The interim period is the time between v1 publication and PCIS-1 availability. During this period, Level 1 self-declared conformance is the only available mechanism.
 
-PCIS-1 is targeted for release within 12 months of the first production-conformant implementation being publicly announced. Progress is tracked at: github.com/polaris-specs/polaris-protocol/milestones
+PCIS-1 is targeted for release within 12 months of the first production-conformant implementation being publicly announced. Progress is tracked at: github.com/polaris-protocol/polaris-protocol/milestones
 
 The Polaris Protocol maintainers commit to:
 

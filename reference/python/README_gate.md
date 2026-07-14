@@ -122,5 +122,5 @@ def test_blocks_stale():
 Polaris Gate implements the execution gate from the Polaris Protocol —
 a structural model for execution authority in distributed systems.
 
-Specification: [github.com/polaris-specs/polaris-protocol](https://github.com/polaris-specs/polaris-protocol)
+Specification: [github.com/polaris-protocol/polaris-protocol](https://github.com/polaris-protocol/polaris-protocol)
 Paper: SRDS 2026 (submitted May 2026)
